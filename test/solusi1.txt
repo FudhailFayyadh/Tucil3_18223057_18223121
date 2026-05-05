@@ -1,0 +1,105 @@
+Algoritma : A* dengan heuristik H1
+Solusi    : RULUDRUR
+Cost      : 87
+Iterasi   : 16
+Waktu     : 0.00 ms
+
+=== LANGKAH-LANGKAH ===
+Initial
+XXXXXXX
+X0****X
+X**X**X
+X****OX
+X1***LX
+XZ**X*X
+XXXXXXX
+
+Step 1 : R
+XXXXXXX
+X0****X
+X**X**X
+X****OX
+X1***LX
+X**ZX*X
+XXXXXXX
+
+Step 2 : U
+XXXXXXX
+X0****X
+X**X**X
+X**Z*OX
+X1***LX
+X***X*X
+XXXXXXX
+
+Step 3 : L
+XXXXXXX
+X0****X
+X**X**X
+XZ***OX
+X1***LX
+X***X*X
+XXXXXXX
+
+Step 4 : U
+XXXXXXX
+XZ****X
+X**X**X
+X****OX
+X1***LX
+X***X*X
+XXXXXXX
+
+Step 5 : D
+XXXXXXX
+X*****X
+X**X**X
+X****OX
+X****LX
+XZ**X*X
+XXXXXXX
+
+Step 6 : R
+XXXXXXX
+X*****X
+X**X**X
+X****OX
+X****LX
+X**ZX*X
+XXXXXXX
+
+Step 7 : U
+XXXXXXX
+X*****X
+X**X**X
+X**Z*OX
+X****LX
+X***X*X
+XXXXXXX
+
+Step 8 : R
+XXXXXXX
+X*****X
+X**X**X
+X****ZX
+X****LX
+X***X*X
+XXXXXXX
+
+=== LOG ITERASI ===
+Iter 1: pos=(5,1) cpIdx=0 g=0 pri=6 moves=
+Iter 2: pos=(5,3) cpIdx=0 g=7 pri=11 moves=R
+Iter 3: pos=(3,3) cpIdx=0 g=17 pri=19 moves=RU
+Iter 4: pos=(3,5) cpIdx=0 g=26 pri=26 moves=RUR
+Iter 5: pos=(3,1) cpIdx=0 g=27 pri=31 moves=RUL
+Iter 6: pos=(1,5) cpIdx=0 g=36 pri=38 moves=RURU
+Iter 7: pos=(1,1) cpIdx=1 g=37 pri=43 moves=RULU
+Iter 8: pos=(3,1) cpIdx=0 g=44 pri=48 moves=RURL
+Iter 9: pos=(1,5) cpIdx=1 g=53 pri=55 moves=RULUR
+Iter 10: pos=(1,1) cpIdx=1 g=54 pri=60 moves=RURUL
+Iter 11: pos=(3,5) cpIdx=1 g=66 pri=66 moves=RULURD
+Iter 12: pos=(5,1) cpIdx=2 g=61 pri=67 moves=RULUD
+Iter 13: pos=(5,3) cpIdx=2 g=68 pri=72 moves=RULUDR
+Iter 14: pos=(3,3) cpIdx=2 g=78 pri=80 moves=RULUDRU
+Iter 15: pos=(1,1) cpIdx=2 g=79 pri=85 moves=RULUDU
+Iter 16: pos=(3,5) cpIdx=2 g=87 pri=87 moves=RULUDRUR
