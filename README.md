@@ -118,4 +118,5 @@ tucil3/
 
 ## Author
 
-Fudhail Fayyadh
+Fudhail Fayyadh 18223121
+Stanislaus Ardy Bramantyo 18223057
