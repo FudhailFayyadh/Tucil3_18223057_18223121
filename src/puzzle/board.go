@@ -10,155 +10,194 @@ import (
 )
 
 const (
-	TilePath  = byte('*')
-	TileWall  = byte('X')
-	TileLava  = byte('L')
-	TileGoal  = byte('O')
+	TilePath = byte('*')
+	TileWall = byte('X')
+	TileLava = byte('L')
+	TileGoal = byte('O')
 	TileStart = byte('Z')
 )
 
 type Board struct {
-	N, M         int
-	Tiles        [][]byte
-	Costs        [][]int
-	StartRow     int
-	StartCol     int
-	GoalRow      int
-	GoalCol      int
-	Checkpoints  []int // sorted unique digit values present on board
+	N, M int
+	Tiles [][]byte
+	Costs [][]int
+	StartRow int
+	StartCol int
+	GoalRow int
+	GoalCol int
+	Checkpoints []int 
 }
 
-func ParseBoard(filename string) (*Board, error) {
-	f, err := os.Open(filename)
+func ParseBoard(namaFile string) (*Board, error) {
+	file, err:= os.Open(namaFile)
 	if err != nil {
-		return nil, fmt.Errorf("cannot open file: %w", err)
+		return nil, fmt.Errorf("gagal membuka fila: %v", err)
+		
 	}
-	defer f.Close()
+	defer file.Close()
 
-	scanner := bufio.NewScanner(f)
-
-	// Read N M
-	if !scanner.Scan() {
-		return nil, fmt.Errorf("file is empty")
-	}
-	parts := strings.Fields(scanner.Text())
-	if len(parts) < 2 {
-		return nil, fmt.Errorf("first line must contain N M")
-	}
-	n, err1 := strconv.Atoi(parts[0])
-	m, err2 := strconv.Atoi(parts[1])
-	if err1 != nil || err2 != nil || n <= 0 || m <= 0 {
-		return nil, fmt.Errorf("invalid N M values")
+	read := bufio.NewScanner(file)
+	if !read.Scan() {
+		return nil, fmt.Errorf("File kosong")
 	}
 
-	b := &Board{N: n, M: m, StartRow: -1, StartCol: -1, GoalRow: -1, GoalCol: -1}
-	b.Tiles = make([][]byte, n)
-	digitSet := map[int]bool{}
+	rowOne := read.Text()
+	textRow := strings.Fields(rowOne)
 
-	// Read tile rows
-	for i := 0; i < n; i++ {
-		if !scanner.Scan() {
-			return nil, fmt.Errorf("expected %d tile rows, got %d", n, i)
+	if len(textRow) <2 {
+		return nil, fmt.Errorf("Harus memberikan 2 angka")
+	}
+
+	nBaris, err1 := strconv.Atoi(textRow[0])
+	nKolom, err2 := strconv.Atoi(textRow[1])
+
+	if err1 != nil || err2 != nil {
+		return nil, fmt.Errorf("Angka yang diberikan tidak valid")
+	}
+
+	board := &Board {
+		N: nBaris,
+		M: nKolom,
+		StartRow : -1,
+		StartCol : -1,
+		GoalRow : -1,
+		GoalCol : -1,
+	}
+
+	board.Tiles = make([][]byte, nBaris)
+	daftarAngka := map[int]bool{}
+
+	for i:=0; i<nBaris; i++ {
+		if !read.Scan() {
+			return nil, fmt.Errorf("Baris ke-%d kosong", i)
 		}
-		line := scanner.Text()
-		if len(line) != m {
-			return nil, fmt.Errorf("row %d has length %d, expected %d", i, len(line), m)
+
+		textBaris := read.Text()
+		if len(textBaris) != nKolom {
+			return nil, fmt.Errorf("Panjang baris tidak sesuai")
 		}
-		b.Tiles[i] = []byte(line)
-		for j := 0; j < m; j++ {
-			ch := b.Tiles[i][j]
-			switch ch {
-			case TileStart:
-				if b.StartRow >= 0 {
-					return nil, fmt.Errorf("multiple start positions")
+
+		board.Tiles[i] = []byte(textBaris)
+		for j:=0; j<nKolom; j++ {
+			karakater := board.Tiles[i][j]
+
+			if karakater == 'Z' { // tile start
+				if board.StartRow != -1 {
+					return nil, fmt.Errorf("Start tidak boleh lebih dari 1")
 				}
-				b.StartRow, b.StartCol = i, j
-			case TileGoal:
-				if b.GoalRow >= 0 {
-					return nil, fmt.Errorf("multiple goal positions")
+				board.StartRow, board.StartCol = i, j
+			} else if karakater == 'O' { // tile goal
+				if board.GoalRow != -1 {
+					return nil, fmt.Errof{"Goal tidak boleh lebih dari 1"}
 				}
-				b.GoalRow, b.GoalCol = i, j
-			case TilePath, TileWall, TileLava:
-				// valid
-			default:
-				if ch >= '0' && ch <= '9' {
-					digitSet[int(ch-'0')] = true
-				} else {
-					return nil, fmt.Errorf("unknown tile '%c' at (%d,%d)", ch, i, j)
-				}
+				board.GoalRow, board.GoalCol = i, j
+			} else if karakater >= '0' && karakater <= '9' {
+				angka := int(karakater - '0')
+				daftarAngka[angka] = true
 			}
 		}
 	}
 
-	if b.StartRow < 0 {
-		return nil, fmt.Errorf("no start position (Z) found")
-	}
-	if b.GoalRow < 0 {
-		return nil, fmt.Errorf("no goal position (O) found")
+	if board.StartRow == -1 || board.GoalRow == -1 {
+		return nil, fmt.Errorf{"Start / Goal tidak ditemukan"}
 	}
 
-	// Read cost rows
-	b.Costs = make([][]int, n)
-	for i := 0; i < n; i++ {
-		if !scanner.Scan() {
-			return nil, fmt.Errorf("expected %d cost rows, got %d", n, i)
+	board.Costs = make ([][]int, nBaris)
+
+	for i:=0; i < nBaris; i++ {
+		if !read.Scan() {
+			return nil, fmt.Errorf("Baris ke-%d kosong", i)
 		}
-		fields := strings.Fields(scanner.Text())
-		if len(fields) != m {
-			return nil, fmt.Errorf("cost row %d has %d values, expected %d", i, len(fields), m)
+
+		textAngka := strings.Fields(read.Text())
+		if len(textAngka) != nKolom {
+			return nil, fmt.Errorf("Panjang baris tidak sesuai")
 		}
-		b.Costs[i] = make([]int, m)
-		for j, f := range fields {
-			v, err := strconv.Atoi(f)
+
+		board.Costs[i] = make([]int, nKolom)
+		for j:=0; j<nKolom; j++ {
+			biaya, err :=strconv.Atoi(textAngka[j])
+
 			if err != nil {
-				return nil, fmt.Errorf("invalid cost at (%d,%d): %s", i, j, f)
+				return nil, fmt.Errorf("...")
 			}
-			b.Costs[i][j] = v
+			board.Costs[i][j] = biaya
 		}
 	}
-
-	// Build sorted checkpoints
-	for d := range digitSet {
-		b.Checkpoints = append(b.Checkpoints, d)
+	for angka := range daftarAngka {
+		board.Checkpoints = append(board.Checkpoints, angka)
 	}
-	sort.Ints(b.Checkpoints)
+	sort.Ints(board.Checkpoints)
 
-	return b, nil
+	return board, nil
 }
 
-func (b *Board) IsGoal(s State) bool {
-	return s.Row == b.GoalRow && s.Col == b.GoalCol && s.CheckpointIdx == len(b.Checkpoints)
+func (board *Board) IsGoal(status State) bool {
+	if status.Row == board.GoalRow {
+		if status.Col == board.GoalCol {
+			total := len(board.Checkpoints)
+
+			if status.CheckpointIdx == total {
+				return true
+			}
+		}
+	}
+	return false 
 }
 
-func (b *Board) InitialState() State {
-	return State{Row: b.StartRow, Col: b.StartCol, CheckpointIdx: 0}
+func (board *Board) InitialState() State {
+	var status State
+
+	status.Row = board.StartRow
+	status.Col = board.StartCol
+	status.CheckpointIdx = 0
+
+	return status
 }
 
-// PrintWithActor renders the board with actor at (row,col).
-// checkpointIdx is the index of the next required checkpoint; all digits
-// with value < Checkpoints[checkpointIdx] have been collected and show as '*'.
-func (b *Board) PrintWithActor(row, col, checkpointIdx int) string {
-	var sb strings.Builder
-	for i := 0; i < b.N; i++ {
-		for j := 0; j < b.M; j++ {
-			tile := b.Tiles[i][j]
-			if i == row && j == col {
-				sb.WriteByte('Z')
-			} else if tile == TileStart {
-				sb.WriteByte('*')
-			} else if tile >= '0' && tile <= '9' {
-				digit := int(tile - '0')
-				// if this digit has already been collected, show as '*'
-				if checkpointIdx > 0 && (checkpointIdx >= len(b.Checkpoints) || digit < b.Checkpoints[checkpointIdx]) {
-					sb.WriteByte('*')
-				} else {
-					sb.WriteByte(tile)
+// print board dengan posisi player sekarang
+func (board *Board) PrintWithActor(curRow, curCol, checkpointIdx int) string {
+	hasilTeks := ""
+
+	for i:=0; i < board.N; i++ {
+		for j:=0; j < board.M; j++ {
+			karakterAsli := board.Tiles[i][j]
+
+			if i == curRow && j == curCol {
+				hasilTeks = hasilTeks + "Z"
+				continue
+			}
+
+			if karakterAsli == 'Z' { // TODO: check if Z or S
+				hasilTeks = hasilTeks + "*"
+			} else if karakterAsli >= '0' && karakterAsli <= '9' {
+				angka := int(karakterAsli - '0')
+				diambil := false
+
+				if checkpointIdx > 0 {
+					if checkpointIdx >= len(board.Checkpoints) {
+						diambil = true
+					} else {
+						target := board.Checkpoints[checkpointIdx]
+						if angka < target {
+							diambil = true
+						}
+					}
 				}
+
+				if diambil == true {
+					hasilTeks = hasilTeks + "*"
+				} else {
+					hasilTeks = hasilTeks + string(karakterAsli)
+				}
+
 			} else {
-				sb.WriteByte(tile)
+				hasilTeks = hasilTeks + string(karakterAsli)
 			}
 		}
-		sb.WriteByte('\n')
+
+		hasilTeks = hasilTeks + "\n"
 	}
-	return sb.String()
+
+	return hasilTeks
 }
