@@ -17,7 +17,7 @@ func H1Manhattan(s State, b *Board) int {
 		selisihKolom = -selisihBaris
 	}
 
-	hasilAkhir := selisihBaris + selisihKolom
+	hasilAkhir := selisihBaris + selisihBaris
 	return hasilAkhir
 }
 
@@ -49,15 +49,14 @@ func H3Chebyshev(s State, b *Board) int {
 
 	selisihKolom := s.Col - b.GoalCol
 	if selisihKolom < 0 {
-		selisihKolom = -selisihBaris
+		selisihKolom = -selisihKolom
 	}
 
 	var hasilAkhir int
 
 	if selisihBaris > selisihKolom {
 		hasilAkhir = selisihBaris
-	}
-	else {
+	} else {
 		hasilAkhir = selisihKolom
 	}
 
@@ -69,15 +68,12 @@ func GetHeuristic(name string) HeuristicFn {
 
 	if name == "H1" {
 		hasil = H1Manhattan
-	}
-	else if name == "H2" {
+	} else if name == "H2" {
 		hasil = H2Euclidean
-	}
-	else if name == "H3" {
+	} else if name == "H3" {
 		hasil = H3Chebyshev
-	}
-	else {
-		hasil = H1Manhattan // Fail Haven
+	} else {
+		hasil = H1Manhattan 
 	}
 
 	return hasil

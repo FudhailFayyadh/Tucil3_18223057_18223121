@@ -88,7 +88,7 @@ func ParseBoard(namaFile string) (*Board, error) {
 				board.StartRow, board.StartCol = i, j
 			} else if karakater == 'O' { // tile goal
 				if board.GoalRow != -1 {
-					return nil, fmt.Errof{"Goal tidak boleh lebih dari 1"}
+					return nil, fmt.Errorf("Goal tidak boleh lebih dari 1")
 				}
 				board.GoalRow, board.GoalCol = i, j
 			} else if karakater >= '0' && karakater <= '9' {
@@ -99,7 +99,7 @@ func ParseBoard(namaFile string) (*Board, error) {
 	}
 
 	if board.StartRow == -1 || board.GoalRow == -1 {
-		return nil, fmt.Errorf{"Start / Goal tidak ditemukan"}
+		return nil, fmt.Errorf("Start / Goal tidak ditemukan")
 	}
 
 	board.Costs = make ([][]int, nBaris)
