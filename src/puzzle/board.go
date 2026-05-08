@@ -129,6 +129,12 @@ func ParseBoard(namaFile string) (*Board, error) {
 	}
 	sort.Ints(board.Checkpoints)
 
+	for i, cp := range board.Checkpoints {
+		if cp != i {
+			return nil, fmt.Errorf("sequence checkpoint tidak valid: harus 0,1,2,...,n tanpa skip")
+		}
+	}
+
 	return board, nil
 }
 

@@ -79,9 +79,6 @@ func Slide(b *Board, s State, dir Direction) SlideResult {
 			// idx == len means all done, digit is normal now
 		}
 
-		if tile == TileGoal {
-			break
-		}
 	}
 
 	if rr == s.Row && cc == s.Col {
