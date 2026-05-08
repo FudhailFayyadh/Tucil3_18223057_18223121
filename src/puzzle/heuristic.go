@@ -2,7 +2,6 @@ package puzzle
 
 import "math"
 
-// tipe fungsi heuristik buat A*
 type HeuristicFn func(s State, b *Board) int
 
 // heuristik 1: manhattan
