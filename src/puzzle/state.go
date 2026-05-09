@@ -1,16 +1,16 @@
 package puzzle
 
 type State struct {
-	Row, Col      int
+	Row, Col int
 	CheckpointIdx int
 }
 
 type Direction byte
 
 const (
-	DirUp    Direction = 'U'
-	DirDown  Direction = 'D'
-	DirLeft  Direction = 'L'
+	DirUp Direction = 'U'
+	DirDown Direction = 'D'
+	DirLeft Direction = 'L'
 	DirRight Direction = 'R'
 )
 
@@ -18,76 +18,109 @@ var AllDirections = []Direction{DirUp, DirDown, DirLeft, DirRight}
 
 type SlideResult struct {
 	NewState State
-	Cost     int
-	Valid    bool
+	Cost int
+	Valid bool
 }
 
-func dirDelta(d Direction) (int, int) {
-	switch d {
-	case DirUp:
-		return -1, 0
-	case DirDown:
-		return 1, 0
-	case DirLeft:
-		return 0, -1
-	default:
-		return 0, 1
+func dirDelta(dir Direction) (int, int) {
+	var diffRow int
+	var diffCol int
+
+	if dir == DirUp {
+		diffRow = -1
+		diffCol = 0
+	} else if dir == DirDown {
+		diffRow = 1
+		diffCol = 0
+	} else if dir == DirLeft {
+		diffRow = 0
+		diffCol = -1
+	} else {
+		diffRow = 0
+		diffCol = 1
 	}
+
+	return diffRow, diffCol
 }
 
-func Slide(b *Board, s State, dir Direction) SlideResult {
-	dr, dc := dirDelta(dir)
-	rr, cc := s.Row, s.Col
-	cost := 0
-	idx := s.CheckpointIdx
+func Slide(board *Board, state State, dir Direction) SlideResult {
+	diffRow, diffCol := dirDelta(dir)
+
+	curRow := state.Row
+	curCol := state.Col
+	checkpointIdx := state.checkpointIdx
+	totalCost := 0
 
 	for {
-		nr, nc := rr+dr, cc+dc
-
-		// out of bounds → game over
-		if nr < 0 || nr >= b.N || nc < 0 || nc >= b.M {
-			return SlideResult{Valid: false}
+		nextRow := curRow + diffRow
+		nextCol := curCol + diffCol
+		
+		// cek batas map dlu
+		if nextRow < 0 || nextRow >= board.N || nextCol < 0 || nextCol >= board.M {
+			var failResult SlideResult
+			
+			failResult.Valid = false
+			return failResult
 		}
 
-		tile := b.Tiles[nr][nc]
+		// cek tiles nya
+		nextTile := board.Tiles[nextRow][nextCol]
 
-		// wall → stop before it
-		if tile == TileWall {
-			break
+		if nextTile == TileWall {
+			break // Kalau tembok, berhenti biar ga error
 		}
 
-		// move onto next tile
-		rr, cc = nr, nc
-		cost += b.Costs[rr][cc]
+		curRow := nextRow
+		curCol := nextCol
 
-		if tile == TileLava {
-			return SlideResult{Valid: false}
+		stepCost := board.Costs[curRow][curCol]
+		totalCost = totalCost + stepCost
+
+		if nextTile == TileLava { // kena lava, dead
+			var deathResult SlideResult
+			
+			deathResult.Valid = false
+			return deathResult
 		}
 
-		if tile >= '0' && tile <= '9' {
-			n := int(tile - '0')
-			if idx < len(b.Checkpoints) {
-				nextReq := b.Checkpoints[idx]
-				if n == nextReq {
-					idx++
-				} else if n > nextReq {
-					// out-of-order checkpoint
-					return SlideResult{Valid: false}
+		if nextTile >= '0' && nextTile <= '9' {
+			tileDigit := int (nextTile - '0')
+
+			if checkpointIdx < len(board.Checkpoints) {
+				reqDigit := board.Checkpoints[checkpointIdx]
+
+				if tileDigit == reqDigit {
+					checkpointIdx = checkpointIdx + 1
+
+				} else if tileDigit > reqDigit { // salah jalan
+					var wrongJumpResult SlideResult
+
+					wrongJumpResult.Valid = false
+					return wrongJumpResult
 				}
-				// n < nextReq → already collected, treat as normal
+
 			}
-			// idx == len means all done, digit is normal now
+
 		}
 
 	}
 
-	if rr == s.Row && cc == s.Col {
-		return SlideResult{Valid: false}
+	if curRow == state.Row && curCol == state.Col { // ga gerak
+		var stillResult SlideResult
+
+		stillResult.Valid = false
+		return stillResult
 	}
 
-	return SlideResult{
-		NewState: State{Row: rr, Col: cc, CheckpointIdx: idx},
-		Cost:     cost,
-		Valid:    true,
-	}
+	var resultState State
+	resultState.Row = curRow
+	resultState.Col = curCol
+	resultState.CheckpointIdx = checkpointIdx
+
+	var slideResult SlideResult
+	slideResult.Valid = true
+	slideResult.Cost = totalCost
+	slideResult.NewState = resultState
+	
+	return slideResult
 }
