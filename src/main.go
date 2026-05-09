@@ -20,9 +20,9 @@ func prompt(msg string) string {
 }
 
 func main() {
-	fmt.Println("=== Ice Sliding Puzzle Solver ===")
+	fmt.Println("Ice Sliding Game")
 
-	// Check if GUI flag passed
+	// cek apakah ada flag --gui waktu program dijalankan
 	if len(os.Args) > 1 && os.Args[1] == "--gui" {
 		runGUI()
 		return
@@ -32,7 +32,7 @@ func main() {
 }
 
 func runCLI() {
-	// Input file
+	// minta path file input dari user
 	filePath := prompt(">> Masukan file input : ")
 	board, err := puzzle.ParseBoard(filePath)
 	if err != nil {
@@ -40,27 +40,31 @@ func runCLI() {
 		os.Exit(1)
 	}
 
-	// Algorithm
+	// pilih algoritma
 	algoInput := strings.ToUpper(prompt(">> Algoritma apa yang anda pilih? (UCS/GBFS/A*) : "))
 
+	// kalau GBFS atau A*, tanya heuristik
 	var hName string
 	if algoInput == "GBFS" || algoInput == "A*" {
 		hName = strings.ToUpper(prompt(">> Heuristic apa yang anda pilih? (H1/H2/H3) : "))
 	}
 
-	// Solve
 	fmt.Println()
+	
+	// solve
 	var result puzzle.SolveResult
-	h := puzzle.GetHeuristic(hName)
-	switch algoInput {
-	case "UCS":
-		result = puzzle.SolveUCS(board)
-	case "GBFS":
-		result = puzzle.SolveGBFS(board, h)
-	default: // A*
-		result = puzzle.SolveAStar(board, h)
-	}
+	heuristik := puzzle.GetHeuristic(hName)
+	var result puzzle.SolveResult
 
+	if algoInput == "UCS" {
+		result = puzzle.SolveUCS(board)
+	} else if algoInput == "GBFS" {
+		result = puzzle.SolveGBFS(board, heuristik)
+	} else {
+		// def = A* algorithm
+		result = puzzle.SolveAStar(board, heuristik)
+	}
+ 
 	if !result.Found {
 		fmt.Println("Tidak ditemukan solusi.")
 		fmt.Printf(">> Waktu eksekusi: %.2f ms\n", result.TimeMs)
@@ -68,12 +72,12 @@ func runCLI() {
 		return
 	}
 
-	// Print solution summary
+	// tampilkan rangkuman solusi
 	moveStr := movesToString(result.Moves)
 	fmt.Printf("Solusi Yang Ditemukan : %s\n", moveStr)
 	fmt.Printf("Cost dari Solusi      : %d\n\n", result.TotalCost)
 
-	// Print all steps
+	// tampilkan tiap langkah satu per satu
 	fmt.Println("Initial")
 	s0 := result.States[0]
 	fmt.Print(board.PrintWithActor(s0.Row, s0.Col, s0.CheckpointIdx))
@@ -88,7 +92,7 @@ func runCLI() {
 	fmt.Printf(">> Waktu eksekusi: %.2f ms\n", result.TimeMs)
 	fmt.Printf(">> Banyak iterasi yang dilakukan: %d iterasi\n", result.Iterations)
 
-	// Playback
+	// replay
 	doPlayback := strings.ToLower(prompt("\n>> Apakah Anda ingin melakukan playback? (Ya/Tidak) : "))
 	if doPlayback == "ya" || doPlayback == "y" {
 		startStepStr := prompt(">> Pada step berapa anda ingin melakukan playback : ")
