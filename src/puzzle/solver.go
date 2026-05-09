@@ -15,15 +15,33 @@ type Node struct {
 
 type PriorityQueue []*Node
 
-func (pq PriorityQueue) Len() int            { return len(pq) }
-func (pq PriorityQueue) Less(i, j int) bool  { return pq[i].Priority < pq[j].Priority }
-func (pq PriorityQueue) Swap(i, j int)       { pq[i], pq[j] = pq[j], pq[i] }
-func (pq *PriorityQueue) Push(x interface{}) { *pq = append(*pq, x.(*Node)) }
-func (pq *PriorityQueue) Pop() interface{} {
-	old := *pq
-	n := old[len(old)-1]
-	*pq = old[:len(old)-1]
-	return n
+func (prioQ PriorityQueue) Len() int {
+	return len(prioQ)
+} 
+func (prioQ PriorityQueue) Less(i, j int) bool {
+	return prioQ[i].Priority < prioQ[j].Priority
+}
+
+func (prioQ PriorityQueue) Swap(i, j int) {
+	temp := prioQ [i]
+	prioQ[i] = prioQ[j]
+	prioQ[j] = temp
+}
+
+func (prioQ PriorityQueue) Push(x interface{}) {
+	newNode := x.(*Node)
+	*prioQ = append(*prioQ, newNode)
+}
+
+func (prioQ *PriorityQueue) Pop() interface{} {
+	prioQ_temp := *prioQ
+	length := len(prioQ_temp)
+
+	// pop disini
+	result := prioQ[length-1]
+	*prioQ = prioQ_temp[:length-1]
+
+	return result
 }
 
 type IterLog struct {
@@ -44,91 +62,120 @@ type SolveResult struct {
 	Log        []IterLog
 }
 
-func solve(b *Board, priorityFn func(g int, s State) int) SolveResult {
-	start := time.Now()
-	init := b.InitialState()
+func solve(board *Board, prioCount func(g int, s State) int) SolveResult {
+	startTime := time.Now()
 
-	startMoves := []Direction{}
-	startStates := []State{init}
+	awal := board.InitialState()
 
-	pq := &PriorityQueue{}
-	heap.Init(pq)
-	heap.Push(pq, &Node{
-		State:    init,
-		GCost:    0,
-		Priority: priorityFn(0, init),
-		Moves:    startMoves,
-		States:   startStates,
-	})
+	nodeAwal := &Node{
+		state: awal,
+		GCost: 0,
+		Priority: prioCount(0, awal),
+		Moves: []Direction{},
+		States: []State{awal},
+	}
 
-	// visited: state → best gCost seen
-	visited := map[State]int{}
-	iterations := 0
-	var logs []IterLog
+	prioQ := &PriorityQueue{}
+	heap.Init(prioQ)
+	heap.Push(prioQ, nodeAwal)
+	
+	visitedList := map[State]int{}
 
-	for pq.Len() > 0 {
-		cur := heap.Pop(pq).(*Node)
-		iterations++
+	cntIter :=0
+	var iterLog []IterLog
 
-		logs = append(logs, IterLog{
-			Iteration: iterations,
-			State:     cur.State,
-			GCost:     cur.GCost,
-			Priority:  cur.Priority,
-			Moves:     append([]Direction{}, cur.Moves...),
+	for prioQ.Len() > 0 {
+		node := heap.Pop(prioQ).(*Node)
+		cntIter++
+
+		iterLog = append(iterLog, IterLog{
+			Iteration: cntIter,
+			State: node.State,
+			GCost: node.GCost,
+			Priority: node.Priority,
+			Moves: append([]Direction{}, node.Moves...),
 		})
 
-		if best, seen := visited[cur.State]; seen && best <= cur.GCost {
+		bestCost, visitedBLock := visitedList[node.State]
+
+		if (visitedBLock && bestCost <= node.GCost) {
 			continue
 		}
-		visited[cur.State] = cur.GCost
 
-		if b.IsGoal(cur.State) {
-			elapsed := float64(time.Since(start).Microseconds()) / 1000.0
-			return SolveResult{
-				Found:      true,
-				Moves:      cur.Moves,
-				States:     cur.States,
-				TotalCost:  cur.GCost,
-				Iterations: iterations,
-				TimeMs:     elapsed,
-				Log:        logs,
+		visitedList[node.State] = node.GCost
+
+		if board.IsGoal(node.State) {
+			finishTime := float64(time.Since(startTime).Microseconds()) / 1000.0
+
+			return result {
+				Found: true,
+				Moves: node.Moves,
+				States: node.States,
+				TotalCost: node.GCost,
+				Iterations: cntIter,
+				TimeMs: finishTime,
+				Log: iterLog
 			}
 		}
 
-		for _, dir := range AllDirections {
-			res := Slide(b, cur.State, dir)
-			if !res.Valid {
+		for _, direction := range AllDirections {
+			move := Slide(board, node.State, direction)
+
+			if !move.Valid {
 				continue
 			}
-			newG := cur.GCost + res.Cost
-			if best, seen := visited[res.NewState]; seen && best <= newG {
+
+			newCost := node.GCost + move.Cost
+
+			newBestCost, newVisitedBlock := visitedList[move.NewState]
+			
+			if (newVisitedBlock && newBestCost <= newCost) {
 				continue
 			}
-			newMoves := append(append([]Direction{}, cur.Moves...), dir)
-			newStates := append(append([]State{}, cur.States...), res.NewState)
-			heap.Push(pq, &Node{
-				State:    res.NewState,
-				GCost:    newG,
-				Priority: priorityFn(newG, res.NewState),
-				Moves:    newMoves,
-				States:   newStates,
-			})
+
+			newStep := append([]Direction{}, node.Moves...)
+			newStep = append(newStep, direction)
+			
+			newState := append([]State{}, node.States...)
+			newState = append(newState, move.NewState)
+
+			newNode := &Node{
+				State: move.NewState,
+				GCost: newCost,
+				Priority: prioCount(newCost, move.NewState),
+				Moves: newStep,
+				States: newState,
+			}
+			heap.Push(prioQ, newNode)
 		}
 	}
 
-	elapsed := float64(time.Since(start).Microseconds()) / 1000.0
-	return SolveResult{Found: false, Iterations: iterations, TimeMs: elapsed, Log: logs}
+	finishTime := float64(time.Since(startTime).Microseconds()) / 1000.0
+	return result {
+		Found: false,
+		Iterations: cntIter,
+		TimeMs: finishTime,
+		Log: iterLog
+	}
 }
 
-func SolveUCS(b *Board) SolveResult {
-	return solve(b, func(g int, s State) int { return g })
+func SolveUCS(board *Board) SolveResult {
+	prioCount := func(g int, s State) int {
+		return g
+	}
+	return solve(board, prioCount)
 }
 
-func SolveGBFS(b *Board, h HeuristicFn) SolveResult {
-	return solve(b, func(g int, s State) int { return h(s, b) })
+func SolveGBFS(board *Board, heuristik HeuristicFn) SolveResult {
+	prioCount := func(g int, s State) int {
+		return heuristik(s, board)
+	}
+	return solve(board, prioCount)
 }
 
-func SolveAStar(b *Board, h HeuristicFn) SolveResult {
-	return solve(b, func(g int, s State) int { return g + h(s, b) })
+func SolveAStar(board *Board, heuristik HeuristicFn) SolveResult {
+	prioCount := func(g int, s State) int {
+		return g + heuristik (s, board)
+	}
+	return solve(board, prioCount)
 }
