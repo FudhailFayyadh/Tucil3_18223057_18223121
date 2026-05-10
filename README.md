@@ -111,8 +111,6 @@ Tucil3_18223057_18223121/
 │       ├── heuristic.go # H1, H2, H3
 │       └── solver.go    # UCS, GBFS, A*
 ├── test/                # Test cases
-├── doc/                 # Laporan PDF
-├── bin/                 # Executable
 └── README.md
 ```
 
