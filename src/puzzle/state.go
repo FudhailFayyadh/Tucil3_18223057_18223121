@@ -70,8 +70,8 @@ func Slide(board *Board, state State, dir Direction) SlideResult {
 			break // Kalau tembok, berhenti biar ga error
 		}
 
-		curRow := nextRow
-		curCol := nextCol
+		curRow = nextRow
+		curCol = nextCol
 
 		stepCost := board.Costs[curRow][curCol]
 		totalCost = totalCost + stepCost
