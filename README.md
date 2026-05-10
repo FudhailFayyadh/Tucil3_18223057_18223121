@@ -101,7 +101,7 @@ XXXXXXX
 ## Struktur Repository
 
 ```
-tucil3/
+Tucil3_18223057_18223121/
 ├── src/
 │   ├── main.go          # Entry point CLI
 │   ├── gui.go           # GUI (Fyne)
