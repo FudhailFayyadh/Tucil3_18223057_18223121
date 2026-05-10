@@ -28,7 +28,7 @@ func (prioQ PriorityQueue) Swap(i, j int) {
 	prioQ[j] = temp
 }
 
-func (prioQ PriorityQueue) Push(x interface{}) {
+func (prioQ *PriorityQueue) Push(x interface{}) {
 	newNode := x.(*Node)
 	*prioQ = append(*prioQ, newNode)
 }
@@ -38,7 +38,7 @@ func (prioQ *PriorityQueue) Pop() interface{} {
 	length := len(prioQ_temp)
 
 	// pop disini
-	result := prioQ[length-1]
+	result := prioQ_temp[length-1]
 	*prioQ = prioQ_temp[:length-1]
 
 	return result
@@ -68,7 +68,7 @@ func solve(board *Board, prioCount func(g int, s State) int) SolveResult {
 	awal := board.InitialState()
 
 	nodeAwal := &Node{
-		state: awal,
+		State: awal,
 		GCost: 0,
 		Priority: prioCount(0, awal),
 		Moves: []Direction{},
@@ -107,14 +107,14 @@ func solve(board *Board, prioCount func(g int, s State) int) SolveResult {
 		if board.IsGoal(node.State) {
 			finishTime := float64(time.Since(startTime).Microseconds()) / 1000.0
 
-			return result {
+			return SolveResult{
 				Found: true,
 				Moves: node.Moves,
 				States: node.States,
 				TotalCost: node.GCost,
 				Iterations: cntIter,
 				TimeMs: finishTime,
-				Log: iterLog
+				Log: iterLog,
 			}
 		}
 
@@ -151,11 +151,11 @@ func solve(board *Board, prioCount func(g int, s State) int) SolveResult {
 	}
 
 	finishTime := float64(time.Since(startTime).Microseconds()) / 1000.0
-	return result {
+	return SolveResult{
 		Found: false,
 		Iterations: cntIter,
 		TimeMs: finishTime,
-		Log: iterLog
+		Log: iterLog,
 	}
 }
 

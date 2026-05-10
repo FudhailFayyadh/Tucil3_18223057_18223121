@@ -48,7 +48,7 @@ func Slide(board *Board, state State, dir Direction) SlideResult {
 
 	curRow := state.Row
 	curCol := state.Col
-	checkpointIdx := state.checkpointIdx
+	checkpointIdx := state.CheckpointIdx
 	totalCost := 0
 
 	for {

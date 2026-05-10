@@ -52,7 +52,6 @@ func runCLI() {
 	fmt.Println()
 	
 	// solve
-	var result puzzle.SolveResult
 	heuristik := puzzle.GetHeuristic(hName)
 	var result puzzle.SolveResult
 

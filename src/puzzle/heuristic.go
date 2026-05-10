@@ -13,10 +13,10 @@ func H1Manhattan(s State, b *Board) int {
 
 	selisihKolom := s.Col - b.GoalCol
 	if selisihKolom < 0 {
-		selisihKolom = -selisihBaris
+		selisihKolom = -selisihKolom
 	}
 
-	hasilAkhir := selisihBaris + selisihBaris
+	hasilAkhir := selisihBaris + selisihKolom
 	return hasilAkhir
 }
 
